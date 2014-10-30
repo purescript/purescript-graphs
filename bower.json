@@ -20,6 +20,9 @@
     "package.json"
   ],
   "dependencies": {
+    "purescript-maybe": "~0.2.1",
+    "purescript-arrays": "~0.2.1",
+    "purescript-foldable-traversable": "~0.1.4",
     "purescript-maps": "~0.1.0"
   }
 }
