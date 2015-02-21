@@ -2,34 +2,74 @@
 
 ## Module Data.Graph
 
-### Types
+#### `Edge`
 
-    data Edge k where
-      Edge :: k -> k -> Edge k
-
-    data Graph k v where
-      Graph :: [v] -> [Edge k] -> Graph k v
-
-    data SCC v where
-      AcyclicSCC :: v -> SCC v
-      CyclicSCC :: [v] -> SCC v
+``` purescript
+data Edge k
+  = Edge k k
+```
 
 
-### Type Class Instances
+#### `Graph`
 
-    instance eqSCC :: (Eq v) => Eq (SCC v)
+``` purescript
+data Graph k v
+  = Graph [v] [Edge k]
+```
 
-    instance showSCC :: (Show v) => Show (SCC v)
+
+#### `SCC`
+
+``` purescript
+data SCC v
+  = AcyclicSCC v
+  | CyclicSCC [v]
+```
 
 
-### Values
+#### `showSCC`
 
-    scc :: forall v. (Eq v, Ord v) => Graph v v -> [SCC v]
+``` purescript
+instance showSCC :: (Show v) => Show (SCC v)
+```
 
-    scc' :: forall k v. (Eq k, Ord k) => (v -> k) -> (k -> v) -> Graph k v -> [SCC v]
 
-    topSort :: forall v. (Eq v, Ord v) => Graph v v -> [v]
+#### `eqSCC`
 
-    topSort' :: forall k v. (Eq k, Ord k) => (v -> k) -> (k -> v) -> Graph k v -> [v]
+``` purescript
+instance eqSCC :: (Eq v) => Eq (SCC v)
+```
 
-    vertices :: forall v. SCC v -> [v]
+
+#### `vertices`
+
+``` purescript
+vertices :: forall v. SCC v -> [v]
+```
+
+
+#### `scc`
+
+``` purescript
+scc :: forall v. (Eq v, Ord v) => Graph v v -> [SCC v]
+```
+
+
+#### `scc'`
+
+``` purescript
+scc' :: forall k v. (Eq k, Ord k) => (v -> k) -> (k -> v) -> Graph k v -> [SCC v]
+```
+
+
+#### `topSort`
+
+``` purescript
+topSort :: forall v. (Eq v, Ord v) => Graph v v -> [v]
+```
+
+#### `topSort'`
+
+``` purescript
+topSort' :: forall k v. (Eq k, Ord k) => (v -> k) -> (k -> v) -> Graph k v -> [v]
+```
