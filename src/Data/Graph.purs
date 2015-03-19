@@ -1,3 +1,5 @@
+-- | A data structure and functions for graphs
+
 module Data.Graph (
   Edge(..),
   Graph(..),
@@ -24,12 +26,21 @@ import Control.Monad.ST
 import qualified Data.Map as M
 import qualified Data.Set as S
 
+-- | An directed edge between vertices labelled with keys of type `k`.
 data Edge k = Edge k k
 
+-- | A graph with vertices of type `v`.
+-- |
+-- | Edges refer to vertices using keys of type `k`.
 data Graph k v = Graph [v] [Edge k]
 
 type Index = Number
 
+-- | A strongly-connected component of a graph.
+-- |
+-- | - `AcyclicSCC` identifies strongly-connected components consisting of a single vertex.
+-- | - `CyclicSCC` identifies strongly-connected components with one or more vertices with
+-- |   cycles.
 data SCC v = AcyclicSCC v | CyclicSCC [v]
 
 instance showSCC :: (Show v) => Show (SCC v) where
@@ -42,13 +53,19 @@ instance eqSCC :: (Eq v) => Eq (SCC v) where
   (==) _ _ = false
   (/=) scc1 scc2 = not (scc1 == scc2)
 
+-- | Returns the vertices contained in a strongly-connected component.
 vertices :: forall v. SCC v -> [v]
 vertices (AcyclicSCC v) = [v]
 vertices (CyclicSCC vs) = vs
 
+-- | Compute the strongly connected components of a graph.
 scc :: forall v. (Eq v, Ord v) => Graph v v -> [SCC v]
 scc = scc' id id
 
+-- | Compute the strongly connected components of a graph.
+-- | 
+-- | This function is a slight generalization of `scc` which allows key and value types
+-- | to differ.
 scc' :: forall k v. (Eq k, Ord k) => (v -> k) -> (k -> v) -> Graph k v -> [SCC v]
 scc' makeKey makeVert (Graph vs es) = runPure (runST (do
   index      <- newSTRef 0
@@ -128,11 +145,13 @@ maybeMin :: Index -> Maybe Index -> Maybe Index
 maybeMin i Nothing = Just i
 maybeMin i (Just j) = Just $ Math.min i j
 
--- |
--- Topological sort
---
+-- | Topologically sort the vertices of a graph
 topSort :: forall v. (Eq v, Ord v) => Graph v v -> [v]
 topSort = topSort' id id
 
+-- | Topologically sort the vertices of a graph
+-- | 
+-- | This function is a slight generalization of `scc` which allows key and value types
+-- | to differ.
 topSort' :: forall k v. (Eq k, Ord k) => (v -> k) -> (k -> v) -> Graph k v -> [v]
 topSort' makeKey makeVert = reverse <<< concatMap vertices <<< scc' makeKey makeVert
