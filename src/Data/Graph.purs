@@ -14,6 +14,7 @@ module Data.Graph (
   topSort'
   ) where
 
+import Data.Int
 import Data.Maybe
 import Data.Array (map, reverse, concatMap)
 import Data.Foldable
@@ -34,7 +35,7 @@ data Edge k = Edge k k
 -- | Edges refer to vertices using keys of type `k`.
 data Graph k v = Graph [v] [Edge k]
 
-type Index = Number
+type Index = Int 
 
 -- | A strongly-connected component of a graph.
 -- |
@@ -68,7 +69,7 @@ scc = scc' id id
 -- | to differ.
 scc' :: forall k v. (Eq k, Ord k) => (v -> k) -> (k -> v) -> Graph k v -> [SCC v]
 scc' makeKey makeVert (Graph vs es) = runPure (runST (do
-  index      <- newSTRef 0
+  index      <- newSTRef zero 
   path       <- newSTRef []
   indexMap   <- newSTRef M.empty
   lowlinkMap <- newSTRef M.empty
@@ -101,7 +102,7 @@ scc' makeKey makeVert (Graph vs es) = runPure (runST (do
       modifySTRef indexMap   $ M.insert k i
       modifySTRef lowlinkMap $ M.insert k i
 
-      writeSTRef index $ i + 1
+      writeSTRef index $ i + one
       modifySTRef path $ (:) v
 
       for es $ \(Edge k' l) -> when (k == k') $ do
@@ -143,7 +144,7 @@ popUntil makeKey v (w : ws)   popped = popUntil makeKey v ws (w : popped)
 
 maybeMin :: Index -> Maybe Index -> Maybe Index
 maybeMin i Nothing = Just i
-maybeMin i (Just j) = Just $ Math.min i j
+maybeMin i (Just j) = Just $ fromNumber $ Math.min (toNumber i) (toNumber j)
 
 -- | Topologically sort the vertices of a graph
 topSort :: forall v. (Eq v, Ord v) => Graph v v -> [v]

@@ -20,10 +20,10 @@
     "package.json"
   ],
   "dependencies": {
-    "purescript-maybe": "~0.2.1",
-    "purescript-arrays": "~0.3.0",
-    "purescript-foldable-traversable": "~0.3.0",
-    "purescript-maps": "~0.3.0",
-    "purescript-sets": "~0.3.0"
+    "purescript-maybe": "~0.3.0",
+    "purescript-arrays": "~0.4.0",
+    "purescript-foldable-traversable": "~0.4.0",
+    "purescript-maps": "~0.4.0",
+    "purescript-sets": "~0.4.0"
   }
 }
