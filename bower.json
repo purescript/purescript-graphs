@@ -24,6 +24,7 @@
     "purescript-arrays": "~0.4.0",
     "purescript-foldable-traversable": "~0.4.0",
     "purescript-maps": "~0.4.0",
-    "purescript-sets": "~0.4.0"
+    "purescript-sets": "~0.4.0",
+    "purescript-lists": "~0.7.0"
   }
 }
