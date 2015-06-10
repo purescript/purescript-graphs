@@ -1,4 +1,4 @@
-# purescript-maps
+# purescript-graphs
 
 A data structure and functions for graphs
 
