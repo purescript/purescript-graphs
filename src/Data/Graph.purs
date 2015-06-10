@@ -145,7 +145,9 @@ popUntil makeKey v (Cons w ws)   popped = popUntil makeKey v ws (Cons w popped)
 
 maybeMin :: Index -> Maybe Index -> Maybe Index
 maybeMin i Nothing = Just i
-maybeMin i (Just j) = Just $ fromNumber $ Math.min (toNumber i) (toNumber j)
+maybeMin i (Just j) = Just $ min i j
+  where
+  min x y = if x < y then x else y
 
 -- | Topologically sort the vertices of a graph
 topSort :: forall v. (Eq v, Ord v) => Graph v v -> List v
