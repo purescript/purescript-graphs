@@ -1,31 +1,26 @@
 -- | A data structure and functions for graphs
 
-module Data.Graph (
-  Edge(..),
-  Graph(..),
-  SCC(..),
-
-  vertices,
-
-  scc,
-  scc',
-
-  topSort,
-  topSort'
+module Data.Graph
+  ( Edge(..)
+  , Graph(..)
+  , SCC(..)
+  , vertices
+  , scc
+  , scc'
+  , topSort
+  , topSort'
   ) where
 
-import Prelude (class Ord, class Eq, class Show, (<<<), id, ($), (<), (==), (&&), not, unit, return, bind, (++), flip, map, one, (+), zero, show)
+import Prelude
 
-import Data.Maybe (Maybe(Just, Nothing), isNothing)
-import Data.List (List(Cons, Nil), concatMap, reverse, singleton)
-import Data.Foldable (any, for_, elem)
-import Data.Traversable (for)
-
-import Control.Monad (when)
 import Control.Monad.Eff (runPure)
 import Control.Monad.ST (writeSTRef, modifySTRef, readSTRef, newSTRef, runST)
 
+import Data.Foldable (any, for_, elem)
+import Data.List (List(..), concatMap, reverse, singleton)
 import Data.Map as M
+import Data.Maybe (Maybe(..), isNothing)
+import Data.Traversable (for)
 
 -- | An directed edge between vertices labelled with keys of type `k`.
 data Edge k = Edge k k
@@ -35,8 +30,6 @@ data Edge k = Edge k k
 -- | Edges refer to vertices using keys of type `k`.
 data Graph k v = Graph (List v) (List (Edge k))
 
-type Index = Int
-
 -- | A strongly-connected component of a graph.
 -- |
 -- | - `AcyclicSCC` identifies strongly-connected components consisting of a single vertex.
@@ -45,8 +38,8 @@ type Index = Int
 data SCC v = AcyclicSCC v | CyclicSCC (List v)
 
 instance showSCC :: (Show v) => Show (SCC v) where
-  show (AcyclicSCC v) = "AcyclicSCC (" ++ show v ++ ")"
-  show (CyclicSCC vs) = "CyclicSCC " ++ show vs
+  show (AcyclicSCC v) = "(AcyclicSCC " <> show v <> ")"
+  show (CyclicSCC vs) = "(CyclicSCC " <> show vs <> ")"
 
 instance eqSCC :: (Eq v) => Eq (SCC v) where
   eq (AcyclicSCC v1) (AcyclicSCC v2) = v1 == v2
@@ -59,14 +52,14 @@ vertices (AcyclicSCC v) = singleton v
 vertices (CyclicSCC vs) = vs
 
 -- | Compute the strongly connected components of a graph.
-scc :: forall v. (Eq v, Ord v) => Graph v v -> List (SCC v)
+scc :: forall v. Ord v => Graph v v -> List (SCC v)
 scc = scc' id id
 
 -- | Compute the strongly connected components of a graph.
 -- |
 -- | This function is a slight generalization of `scc` which allows key and value types
 -- | to differ.
-scc' :: forall k v. (Eq k, Ord k) => (v -> k) -> (k -> v) -> Graph k v -> List (SCC v)
+scc' :: forall k v. Ord k => (v -> k) -> (k -> v) -> Graph k v -> List (SCC v)
 scc' makeKey makeVert (Graph vs es) = runPure (runST (do
   index      <- newSTRef zero
   path       <- newSTRef Nil
@@ -79,13 +72,13 @@ scc' makeKey makeVert (Graph vs es) = runPure (runST (do
 
     indexOfKey k = do
       m <- readSTRef indexMap
-      return $ M.lookup k m
+      pure $ M.lookup k m
 
     lowlinkOf v = lowlinkOfKey (makeKey v)
 
     lowlinkOfKey k = do
       m <- readSTRef lowlinkMap
-      return $ M.lookup k m
+      pure $ M.lookup k m
 
     go Nil = readSTRef components
     go (Cons v vs) = do
@@ -126,9 +119,9 @@ scc' makeKey makeVert (Graph vs es) = runPure (runST (do
       when (vIndex == vLowlink) $ do
         currentPath <- readSTRef path
         let newPath = popUntil makeKey v currentPath Nil
-        modifySTRef components $ flip (++) (singleton (makeComponent newPath.component))
+        modifySTRef components $ flip (<>) (singleton (makeComponent newPath.component))
         writeSTRef path newPath.path
-        return unit
+        pure unit
 
     makeComponent (Cons v Nil) | not (isCycle (makeKey v)) = AcyclicSCC v
     makeComponent vs = CyclicSCC vs
@@ -136,24 +129,24 @@ scc' makeKey makeVert (Graph vs es) = runPure (runST (do
     isCycle k = any (\(Edge k1 k2) -> k1 == k && k2 == k) es
    in go vs)))
 
-popUntil :: forall k v. (Eq k) => (v -> k) -> v -> List v -> List v -> { path :: List v, component :: List v }
+popUntil :: forall k v. Eq k => (v -> k) -> v -> List v -> List v -> { path :: List v, component :: List v }
 popUntil _       _ Nil           popped = { path: Nil, component: popped }
 popUntil makeKey v (Cons w path) popped | makeKey v == makeKey w = { path: path, component: Cons w popped }
 popUntil makeKey v (Cons w ws)   popped = popUntil makeKey v ws (Cons w popped)
 
-maybeMin :: Index -> Maybe Index -> Maybe Index
+maybeMin :: Int -> Maybe Int -> Maybe Int
 maybeMin i Nothing = Just i
 maybeMin i (Just j) = Just $ min i j
   where
   min x y = if x < y then x else y
 
 -- | Topologically sort the vertices of a graph
-topSort :: forall v. (Eq v, Ord v) => Graph v v -> List v
+topSort :: forall v. Ord v => Graph v v -> List v
 topSort = topSort' id id
 
 -- | Topologically sort the vertices of a graph
 -- |
 -- | This function is a slight generalization of `scc` which allows key and value types
 -- | to differ.
-topSort' :: forall k v. (Eq k, Ord k) => (v -> k) -> (k -> v) -> Graph k v -> List v
+topSort' :: forall k v. Ord k => (v -> k) -> (k -> v) -> Graph k v -> List v
 topSort' makeKey makeVert = reverse <<< concatMap vertices <<< scc' makeKey makeVert
