@@ -4,9 +4,6 @@
   "authors": [
     "Phil Freeman <paf31@cantab.net>"
   ],
-  "keywords": [
-    "purescript"
-  ],
   "repository": {
     "type": "git",
     "url": "git://github.com/purescript/purescript-graphs.git"
@@ -17,13 +14,11 @@
     "bower_components",
     "node_modules",
     "output",
-    "tests",
-    "tmp",
+    "test",
     "bower.json",
-    "Gruntfile.js",
     "package.json"
   ],
   "dependencies": {
-    "purescript-sets": "^0.5.0"
+    "purescript-sets": "^1.0.0-rc.1"
   }
 }
