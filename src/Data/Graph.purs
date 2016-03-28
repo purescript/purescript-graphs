@@ -14,19 +14,18 @@ module Data.Graph (
   topSort'
   ) where
 
-import Prelude
+import Prelude (class Ord, class Eq, class Show, (<<<), id, ($), (<), (==), (&&), not, unit, return, bind, (++), flip, map, one, (+), zero, show)
 
-import Data.Maybe
-import Data.List
-import Data.Foldable
-import Data.Traversable
+import Data.Maybe (Maybe(Just, Nothing), isNothing)
+import Data.List (List(Cons, Nil), concatMap, reverse, singleton)
+import Data.Foldable (any, for_, elem)
+import Data.Traversable (for)
 
-import Control.Monad
-import Control.Monad.Eff
-import Control.Monad.ST
+import Control.Monad (when)
+import Control.Monad.Eff (runPure)
+import Control.Monad.ST (writeSTRef, modifySTRef, readSTRef, newSTRef, runST)
 
-import qualified Data.Map as M
-import qualified Data.Set as S
+import Data.Map as M
 
 -- | An directed edge between vertices labelled with keys of type `k`.
 data Edge k = Edge k k
@@ -117,8 +116,8 @@ scc' makeKey makeVert (Graph vs es) = runPure (runST (do
             for_ wLowlink $ \lowlink ->
               modifySTRef lowlinkMap $ M.alter (maybeMin lowlink) k
           _ -> when (l `elem` map makeKey currentPath) $ do
-                 wIndex <- indexOfKey l
-                 for_ wIndex $ \index ->
+                 wIndex' <- indexOfKey l
+                 for_ wIndex' $ \index ->
                    modifySTRef lowlinkMap $ M.alter (maybeMin index) k
 
       vIndex <- indexOfKey k
