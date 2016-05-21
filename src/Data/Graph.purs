@@ -11,7 +11,7 @@ module Data.Graph
   , topSort'
   ) where
 
-import Prelude
+import Prelude hiding
 
 import Control.Monad.Eff (runPure)
 import Control.Monad.ST (writeSTRef, modifySTRef, readSTRef, newSTRef, runST)
@@ -110,8 +110,8 @@ scc' makeKey makeVert (Graph vs es) = runPure (runST (do
               modifySTRef lowlinkMap $ M.alter (maybeMin lowlink) k
           _ -> when (l `elem` map makeKey currentPath) $ do
                  wIndex' <- indexOfKey l
-                 for_ wIndex' $ \index ->
-                   modifySTRef lowlinkMap $ M.alter (maybeMin index) k
+                 for_ wIndex' $ \index' ->
+                   modifySTRef lowlinkMap $ M.alter (maybeMin index') k
 
       vIndex <- indexOfKey k
       vLowlink <- lowlinkOfKey k
