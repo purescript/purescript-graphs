@@ -19,6 +19,6 @@
     "package.json"
   ],
   "dependencies": {
-    "purescript-sets": "^1.0.0-rc.1"
+    "purescript-sets": "^1.0.0"
   }
 }
