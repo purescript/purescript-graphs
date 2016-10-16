@@ -13,14 +13,12 @@ module Data.Graph
 
 import Prelude hiding
 
-import Control.Monad.Eff (runPure)
+import Control.Monad.Eff (runPure, foreachE)
 import Control.Monad.ST (writeSTRef, modifySTRef, readSTRef, newSTRef, runST)
-
 import Data.Foldable (any, for_, elem)
-import Data.List (List(..), concatMap, reverse, singleton)
+import Data.List (List(..), concatMap, reverse, singleton, toUnfoldable)
 import Data.Map as M
 import Data.Maybe (Maybe(..), isNothing)
-import Data.Traversable (for)
 
 -- | An directed edge between vertices labelled with keys of type `k`.
 data Edge k = Edge k k
@@ -97,7 +95,7 @@ scc' makeKey makeVert (Graph vs es) = runPure (runST (do
       writeSTRef index $ i + one
       modifySTRef path $ Cons v
 
-      for es $ \(Edge k' l) -> when (k == k') $ do
+      foreachE (toUnfoldable es) $ \(Edge k' l) -> when (k == k') $ do
         wIndex <- indexOfKey l
         currentPath <- readSTRef path
 
