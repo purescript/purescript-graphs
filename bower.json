@@ -19,6 +19,10 @@
     "package.json"
   ],
   "dependencies": {
-    "purescript-sets": "^1.0.0"
+    "purescript-sets": "^2.0.0",
+    "purescript-catenable-lists": "^3.0.0"
+  },
+  "devDependencies": {
+    "purescript-console": "^2.0.0"
   }
 }

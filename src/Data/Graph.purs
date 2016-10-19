@@ -10,7 +10,9 @@ module Data.Graph
   ) where
 
 import Prelude
-import Data.Foldable (class Foldable, foldl)
+import Data.CatList (CatList)
+import Data.CatList as CL
+import Data.Foldable (class Foldable)
 import Data.List (List(..))
 import Data.List as L
 import Data.Map (Map)
@@ -59,6 +61,11 @@ type SortState k v =
   , result :: List k
   }
 
+-- To defunctionalize the `topologicalSort` function and make it tail-recursive,
+-- we introduce this data type which captures what we intend to do at each stage
+-- of the recursion.
+data SortStep a = Emit a | Visit a
+
 -- | Topologically sort the vertices of a graph.
 -- |
 -- | If the graph contains cycles, then the behavior is undefined.
@@ -69,25 +76,30 @@ topologicalSort (Graph g) =
     go :: SortState k v -> List k
     go state@{ unvisited, result } =
       case M.findMin unvisited of
-        Just { key } -> go (visit state key)
+        Just { key } -> go (visit state (CL.fromFoldable [Visit key]))
         Nothing -> result
 
-    visit :: SortState k v -> k -> SortState k v
-    visit state k
-      | k `M.member` state.unvisited =
-        let finish :: SortState k v -> SortState k v
-            finish { unvisited, result } =
-              { result: Cons k result
-              , unvisited: unvisited
-              }
+    visit :: SortState k v -> CatList (SortStep k) -> SortState k v
+    visit state stack =
+      case CL.uncons stack of
+        Nothing -> state
+        Just (Tuple (Emit k) ks) ->
+          let state' = { result: Cons k state.result
+                       , unvisited: state.unvisited
+                       }
+          in visit state' ks
+        Just (Tuple (Visit k) ks)
+          | k `M.member` state.unvisited ->
+            let start :: SortState k v
+                start =
+                  { result: state.result
+                  , unvisited: M.delete k state.unvisited
+                  }
 
-            start :: SortState k v
-            start =
-              { result: state.result
-              , unvisited: M.delete k state.unvisited
-              }
-        in finish (foldl visit start (maybe mempty _.out (M.lookup k g.vertices)))
-      | otherwise = state
+                next :: List k
+                next = maybe mempty _.out (M.lookup k g.vertices)
+            in visit start (CL.fromFoldable (map Visit next) <> CL.cons (Emit k) ks)
+          | otherwise -> visit state ks
 
     initialState :: SortState k v
     initialState = { unvisited: g.vertices
