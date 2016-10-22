@@ -1,152 +1,112 @@
 -- | A data structure and functions for graphs
 
 module Data.Graph
-  ( Edge(..)
-  , Graph(..)
-  , SCC(..)
+  ( Graph
+  , unfoldGraph
+  , fromMap
   , vertices
-  , scc
-  , scc'
-  , topSort
-  , topSort'
+  , lookup
+  , outEdges
+  , topologicalSort
   ) where
 
-import Prelude hiding
-
-import Control.Monad.Eff (runPure)
-import Control.Monad.ST (writeSTRef, modifySTRef, readSTRef, newSTRef, runST)
-
-import Data.Foldable (any, for_, elem)
-import Data.List (List(..), concatMap, reverse, singleton)
+import Prelude
+import Data.Bifunctor (lmap)
+import Data.CatList (CatList)
+import Data.CatList as CL
+import Data.Foldable (class Foldable)
+import Data.List (List(..))
+import Data.List as L
+import Data.Map (Map)
 import Data.Map as M
-import Data.Maybe (Maybe(..), isNothing)
-import Data.Traversable (for)
-
--- | An directed edge between vertices labelled with keys of type `k`.
-data Edge k = Edge k k
+import Data.Maybe (Maybe(..), maybe)
+import Data.Monoid (mempty)
+import Data.Tuple (Tuple(..), fst, snd)
 
 -- | A graph with vertices of type `v`.
 -- |
 -- | Edges refer to vertices using keys of type `k`.
-data Graph k v = Graph (List v) (List (Edge k))
+newtype Graph k v = Graph (Map k (Tuple v (List k)))
 
--- | A strongly-connected component of a graph.
+instance functorGraph :: Functor (Graph k) where
+  map f (Graph m) = Graph (map (lmap f) m)
+
+-- | Unfold a `Graph` from a collection of keys and functions which label keys
+-- | and specify out-edges.
+unfoldGraph
+  :: forall f k v out
+   . (Ord k, Functor f, Foldable f, Foldable out)
+  => f k
+  -> (k -> v)
+  -> (k -> out k)
+  -> Graph k v
+unfoldGraph ks label edges =
+  Graph (M.fromFoldable (map (\k ->
+            Tuple k (Tuple (label k) (L.fromFoldable (edges k)))) ks))
+
+-- | Create a `Graph` from a `Map` which maps vertices to their labels and
+-- | outgoing edges.
+fromMap :: forall k v. Map k (Tuple v (List k)) -> Graph k v
+fromMap = Graph
+
+-- | List all vertices in a graph.
+vertices :: forall k v. Graph k v -> List v
+vertices (Graph g) = map fst (M.values g)
+
+-- | Lookup a vertex by its key.
+lookup :: forall k v. Ord k => k -> Graph k v -> Maybe v
+lookup k (Graph g) = map fst (M.lookup k g)
+
+-- | Get the keys which are directly accessible from the given key.
+outEdges :: forall k v. Ord k => k -> Graph k v -> Maybe (List k)
+outEdges k (Graph g) = map snd (M.lookup k g)
+
+type SortState k v =
+  { unvisited :: Map k (Tuple v (List k))
+  , result :: List k
+  }
+
+-- To defunctionalize the `topologicalSort` function and make it tail-recursive,
+-- we introduce this data type which captures what we intend to do at each stage
+-- of the recursion.
+data SortStep a = Emit a | Visit a
+
+-- | Topologically sort the vertices of a graph.
 -- |
--- | - `AcyclicSCC` identifies strongly-connected components consisting of a single vertex.
--- | - `CyclicSCC` identifies strongly-connected components with one or more vertices with
--- |   cycles.
-data SCC v = AcyclicSCC v | CyclicSCC (List v)
-
-instance showSCC :: (Show v) => Show (SCC v) where
-  show (AcyclicSCC v) = "(AcyclicSCC " <> show v <> ")"
-  show (CyclicSCC vs) = "(CyclicSCC " <> show vs <> ")"
-
-instance eqSCC :: (Eq v) => Eq (SCC v) where
-  eq (AcyclicSCC v1) (AcyclicSCC v2) = v1 == v2
-  eq (CyclicSCC vs1) (CyclicSCC vs2) = vs1 == vs2
-  eq _ _ = false
-
--- | Returns the vertices contained in a strongly-connected component.
-vertices :: forall v. SCC v -> List v
-vertices (AcyclicSCC v) = singleton v
-vertices (CyclicSCC vs) = vs
-
--- | Compute the strongly connected components of a graph.
-scc :: forall v. Ord v => Graph v v -> List (SCC v)
-scc = scc' id id
-
--- | Compute the strongly connected components of a graph.
--- |
--- | This function is a slight generalization of `scc` which allows key and value types
--- | to differ.
-scc' :: forall k v. Ord k => (v -> k) -> (k -> v) -> Graph k v -> List (SCC v)
-scc' makeKey makeVert (Graph vs es) = runPure (runST (do
-  index      <- newSTRef zero
-  path       <- newSTRef Nil
-  indexMap   <- newSTRef M.empty
-  lowlinkMap <- newSTRef M.empty
-  components <- newSTRef Nil
-
-  (let
-    indexOf v = indexOfKey (makeKey v)
-
-    indexOfKey k = do
-      m <- readSTRef indexMap
-      pure $ M.lookup k m
-
-    lowlinkOf v = lowlinkOfKey (makeKey v)
-
-    lowlinkOfKey k = do
-      m <- readSTRef lowlinkMap
-      pure $ M.lookup k m
-
-    go Nil = readSTRef components
-    go (Cons v vs) = do
-      currentIndex <- indexOf v
-      when (isNothing currentIndex) $ strongConnect (makeKey v)
-      go vs
-
-    strongConnect k = do
-      let v = makeVert k
-
-      i <- readSTRef index
-
-      modifySTRef indexMap   $ M.insert k i
-      modifySTRef lowlinkMap $ M.insert k i
-
-      writeSTRef index $ i + one
-      modifySTRef path $ Cons v
-
-      for es $ \(Edge k' l) -> when (k == k') $ do
-        wIndex <- indexOfKey l
-        currentPath <- readSTRef path
-
-        case wIndex of
-          Nothing -> do
-            let w = makeVert l
-            strongConnect l
-            wLowlink <- lowlinkOfKey l
-            for_ wLowlink $ \lowlink ->
-              modifySTRef lowlinkMap $ M.alter (maybeMin lowlink) k
-          _ -> when (l `elem` map makeKey currentPath) $ do
-                 wIndex' <- indexOfKey l
-                 for_ wIndex' $ \index' ->
-                   modifySTRef lowlinkMap $ M.alter (maybeMin index') k
-
-      vIndex <- indexOfKey k
-      vLowlink <- lowlinkOfKey k
-
-      when (vIndex == vLowlink) $ do
-        currentPath <- readSTRef path
-        let newPath = popUntil makeKey v currentPath Nil
-        modifySTRef components $ flip (<>) (singleton (makeComponent newPath.component))
-        writeSTRef path newPath.path
-        pure unit
-
-    makeComponent (Cons v Nil) | not (isCycle (makeKey v)) = AcyclicSCC v
-    makeComponent vs = CyclicSCC vs
-
-    isCycle k = any (\(Edge k1 k2) -> k1 == k && k2 == k) es
-   in go vs)))
-
-popUntil :: forall k v. Eq k => (v -> k) -> v -> List v -> List v -> { path :: List v, component :: List v }
-popUntil _       _ Nil           popped = { path: Nil, component: popped }
-popUntil makeKey v (Cons w path) popped | makeKey v == makeKey w = { path: path, component: Cons w popped }
-popUntil makeKey v (Cons w ws)   popped = popUntil makeKey v ws (Cons w popped)
-
-maybeMin :: Int -> Maybe Int -> Maybe Int
-maybeMin i Nothing = Just i
-maybeMin i (Just j) = Just $ min i j
+-- | If the graph contains cycles, then the behavior is undefined.
+topologicalSort :: forall k v. Ord k => Graph k v -> List k
+topologicalSort (Graph g) =
+    go initialState
   where
-  min x y = if x < y then x else y
+    go :: SortState k v -> List k
+    go state@{ unvisited, result } =
+      case M.findMin unvisited of
+        Just { key } -> go (visit state (CL.fromFoldable [Visit key]))
+        Nothing -> result
 
--- | Topologically sort the vertices of a graph
-topSort :: forall v. Ord v => Graph v v -> List v
-topSort = topSort' id id
+    visit :: SortState k v -> CatList (SortStep k) -> SortState k v
+    visit state stack =
+      case CL.uncons stack of
+        Nothing -> state
+        Just (Tuple (Emit k) ks) ->
+          let state' = { result: Cons k state.result
+                       , unvisited: state.unvisited
+                       }
+          in visit state' ks
+        Just (Tuple (Visit k) ks)
+          | k `M.member` state.unvisited ->
+            let start :: SortState k v
+                start =
+                  { result: state.result
+                  , unvisited: M.delete k state.unvisited
+                  }
 
--- | Topologically sort the vertices of a graph
--- |
--- | This function is a slight generalization of `scc` which allows key and value types
--- | to differ.
-topSort' :: forall k v. Ord k => (v -> k) -> (k -> v) -> Graph k v -> List v
-topSort' makeKey makeVert = reverse <<< concatMap vertices <<< scc' makeKey makeVert
+                next :: List k
+                next = maybe mempty snd (M.lookup k g)
+            in visit start (CL.fromFoldable (map Visit next) <> CL.cons (Emit k) ks)
+          | otherwise -> visit state ks
+
+    initialState :: SortState k v
+    initialState = { unvisited: g
+                   , result: Nil
+                   }
