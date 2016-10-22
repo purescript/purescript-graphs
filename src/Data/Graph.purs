@@ -3,6 +3,7 @@
 module Data.Graph
   ( Graph
   , unfoldGraph
+  , fromMap
   , vertices
   , lookup
   , outEdges
@@ -10,6 +11,7 @@ module Data.Graph
   ) where
 
 import Prelude
+import Data.Bifunctor (lmap)
 import Data.CatList (CatList)
 import Data.CatList as CL
 import Data.Foldable (class Foldable)
@@ -19,16 +21,17 @@ import Data.Map (Map)
 import Data.Map as M
 import Data.Maybe (Maybe(..), maybe)
 import Data.Monoid (mempty)
-import Data.Tuple (Tuple(..))
+import Data.Tuple (Tuple(..), fst, snd)
 
 -- | A graph with vertices of type `v`.
 -- |
 -- | Edges refer to vertices using keys of type `k`.
-newtype Graph k v = Graph
-  { vertices :: Map k { value :: v, out :: List k }
-  }
+newtype Graph k v = Graph (Map k (Tuple v (List k)))
 
--- | Unfold a graph from a collection of keys and functions which label keys
+instance functorGraph :: Functor (Graph k) where
+  map f (Graph m) = Graph (map (lmap f) m)
+
+-- | Unfold a `Graph` from a collection of keys and functions which label keys
 -- | and specify out-edges.
 unfoldGraph
   :: forall f k v out
@@ -38,26 +41,28 @@ unfoldGraph
   -> (k -> out k)
   -> Graph k v
 unfoldGraph ks label edges =
-  Graph { vertices: M.fromFoldable (map (\k ->
-            Tuple k { value: label k
-                    , out: L.fromFoldable (edges k)
-                    }) ks)
-        }
+  Graph (M.fromFoldable (map (\k ->
+            Tuple k (Tuple (label k) (L.fromFoldable (edges k)))) ks))
+
+-- | Create a `Graph` from a `Map` which maps vertices to their labels and
+-- | outgoing edges.
+fromMap :: forall k v. Map k (Tuple v (List k)) -> Graph k v
+fromMap = Graph
 
 -- | List all vertices in a graph.
 vertices :: forall k v. Graph k v -> List v
-vertices (Graph g) = map _.value (M.values g.vertices)
+vertices (Graph g) = map fst (M.values g)
 
 -- | Lookup a vertex by its key.
 lookup :: forall k v. Ord k => k -> Graph k v -> Maybe v
-lookup k (Graph g) = map _.value (M.lookup k g.vertices)
+lookup k (Graph g) = map fst (M.lookup k g)
 
 -- | Get the keys which are directly accessible from the given key.
 outEdges :: forall k v. Ord k => k -> Graph k v -> Maybe (List k)
-outEdges k (Graph g) = map _.out (M.lookup k g.vertices)
+outEdges k (Graph g) = map snd (M.lookup k g)
 
 type SortState k v =
-  { unvisited :: Map k { value :: v, out :: List k }
+  { unvisited :: Map k (Tuple v (List k))
   , result :: List k
   }
 
@@ -97,11 +102,11 @@ topologicalSort (Graph g) =
                   }
 
                 next :: List k
-                next = maybe mempty _.out (M.lookup k g.vertices)
+                next = maybe mempty snd (M.lookup k g)
             in visit start (CL.fromFoldable (map Visit next) <> CL.cons (Emit k) ks)
           | otherwise -> visit state ks
 
     initialState :: SortState k v
-    initialState = { unvisited: g.vertices
+    initialState = { unvisited: g
                    , result: Nil
                    }
