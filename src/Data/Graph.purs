@@ -35,7 +35,10 @@ instance functorGraph :: Functor (Graph k) where
 -- | and specify out-edges.
 unfoldGraph
   :: forall f k v out
-   . (Ord k, Functor f, Foldable f, Foldable out)
+   . Ord k
+  => Functor f
+  => Foldable f
+  => Foldable out
   => f k
   -> (k -> v)
   -> (k -> out k)
