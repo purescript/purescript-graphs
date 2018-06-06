@@ -20,7 +20,6 @@ import Data.List as L
 import Data.Map (Map)
 import Data.Map as M
 import Data.Maybe (Maybe(..), maybe)
-import Data.Monoid (mempty)
 import Data.Tuple (Tuple(..), fst, snd)
 
 -- | A graph with vertices of type `v`.
