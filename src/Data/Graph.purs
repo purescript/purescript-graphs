@@ -39,13 +39,14 @@ import Data.Map (Map)
 import Data.Map as M
 import Data.Maybe (Maybe(..), isJust, maybe)
 import Data.Set (Set)
+import Data.Set as S
 import Data.Set as Set
 import Data.Tuple (Tuple(..), fst, snd, uncurry)
 
 -- | A graph with vertices of type `v`.
 -- |
 -- | Edges refer to vertices using keys of type `k`.
-newtype Graph k v = Graph (Map k (Tuple v (List k)))
+newtype Graph k v = Graph (Map k (Tuple v (Set k)))
 
 instance functorGraph :: Functor (Graph k) where
   map f (Graph m) = Graph (map (lmap f) m)
@@ -57,12 +58,7 @@ empty = Graph M.empty
 -- | Insert an edge from the start key to the end key.
 insertEdge :: forall k v. Ord k => k -> k -> Graph k v -> Graph k v
 insertEdge from to (Graph g) =
-  Graph $ M.alter (map (rmap (insert to))) from g
-  where
-    insert k l =
-      if k `Foldable.elem` l
-      then l
-      else k `Cons` l
+  Graph $ M.alter (map (rmap (S.insert to))) from g
 
 -- | Insert a vertex into the graph.
 -- |
@@ -90,16 +86,16 @@ unfoldGraph
   -> Graph k v
 unfoldGraph ks label edges =
   Graph (M.fromFoldable (map (\k ->
-            Tuple k (Tuple (label k) (L.fromFoldable (edges k)))) ks))
+            Tuple k (Tuple (label k) (S.fromFoldable (edges k)))) ks))
 
 -- | Create a `Graph` from a `Map` which maps vertices to their labels and
 -- | outgoing edges.
-fromMap :: forall k v. Map k (Tuple v (List k)) -> Graph k v
+fromMap :: forall k v. Map k (Tuple v (Set k)) -> Graph k v
 fromMap = Graph
 
 -- | Turn a `Graph` into a `Map` which maps vertices to their labels and
 -- | outgoing edges.
-toMap :: forall k v. Graph k v -> Map k (Tuple v (List k))
+toMap :: forall k v. Graph k v -> Map k (Tuple v (Set k))
 toMap (Graph g) = g
 
 -- | Check if the first key is adjacent to the second.
@@ -123,7 +119,7 @@ path start end (Graph g) = L.reverse <$> go mempty start
         case M.lookup k g of
           Nothing -> Nothing
           Just (Tuple _ ks) ->
-            L.head <<< L.catMaybes $ go hist' <$> ks
+            S.findMin <<< S.mapMaybe identity $ Set.map (go hist') ks
       where
         hist' = k `Cons` hist
 
@@ -140,7 +136,7 @@ lookup :: forall k v. Ord k => k -> Graph k v -> Maybe v
 lookup k (Graph g) = map fst (M.lookup k g)
 
 -- | Get the keys which are directly accessible from the given key.
-outEdges :: forall k v. Ord k => k -> Graph k v -> Maybe (List k)
+outEdges :: forall k v. Ord k => k -> Graph k v -> Maybe (Set k)
 outEdges k (Graph g) = map snd (M.lookup k g)
 
 -- | Returns immediate ancestors of given key.
@@ -195,7 +191,7 @@ acyclic :: forall k v. Ord k => Graph k v -> Boolean
 acyclic = not <<< cyclic
 
 type SortState k v =
-  { unvisited :: Map k (Tuple v (List k))
+  { unvisited :: Map k (Tuple v (Set k))
   , result :: List k
   }
 
@@ -203,6 +199,8 @@ type SortState k v =
 -- we introduce this data type which captures what we intend to do at each stage
 -- of the recursion.
 data SortStep a = Emit a | Visit a
+derive instance eqSortStep :: Eq a => Eq (SortStep a)
+derive instance ordSortStep :: Ord a => Ord (SortStep a)
 
 -- | Topologically sort the vertices of a graph.
 -- |
@@ -234,9 +232,9 @@ topologicalSort (Graph g) =
                   , unvisited: M.delete k state.unvisited
                   }
 
-                next :: List k
+                next :: Set k
                 next = maybe mempty snd (M.lookup k g)
-            in visit start (CL.fromFoldable (map Visit next) <> CL.cons (Emit k) ks)
+            in visit start (CL.fromFoldable (Set.map Visit next) <> CL.cons (Emit k) ks)
           | otherwise -> visit state ks
 
     initialState :: SortState k v

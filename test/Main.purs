@@ -24,7 +24,7 @@ main = do
       graph = unfoldGraph (range 1 100000) identity double
   foreachE (toUnfoldable (topologicalSort graph)) logShow
   run [consoleReporter] do
-    let l = List.fromFoldable
+    let s = Set.fromFoldable
         --       4 - 8
         --      /     \
         -- 1 - 2 - 3 - 5 - 7
@@ -33,14 +33,14 @@ main = do
         acyclicGraph =
           Graph.fromMap (
             Map.fromFoldable
-              [ Tuple 1 (Tuple 1 (l [ 2 ]))
-              , Tuple 2 (Tuple 2 (l [ 3, 4 ]))
-              , Tuple 3 (Tuple 3 (l [ 5, 6 ]))
-              , Tuple 4 (Tuple 4 (l [ 8 ]))
-              , Tuple 5 (Tuple 5 (l [ 7 ]))
-              , Tuple 6 (Tuple 6 (l [ ]))
-              , Tuple 7 (Tuple 7 (l [ ]))
-              , Tuple 8 (Tuple 8 (l [ 5 ]))
+              [ Tuple 1 (Tuple 1 (s [ 2 ]))
+              , Tuple 2 (Tuple 2 (s [ 3, 4 ]))
+              , Tuple 3 (Tuple 3 (s [ 5, 6 ]))
+              , Tuple 4 (Tuple 4 (s [ 8 ]))
+              , Tuple 5 (Tuple 5 (s [ 7 ]))
+              , Tuple 6 (Tuple 6 (s [ ]))
+              , Tuple 7 (Tuple 7 (s [ ]))
+              , Tuple 8 (Tuple 8 (s [ 5 ]))
               ])
         --       2 - 4
         --      / \
@@ -48,11 +48,11 @@ main = do
         cyclicGraph =
           Graph.fromMap (
             Map.fromFoldable
-              [ Tuple 1 (Tuple 1 (l [ 2 ]))
-              , Tuple 2 (Tuple 2 (l [ 3, 4 ]))
-              , Tuple 3 (Tuple 3 (l [ 1 ]))
-              , Tuple 4 (Tuple 4 (l [ ]))
-              , Tuple 5 (Tuple 5 (l [ 1 ]))
+              [ Tuple 1 (Tuple 1 (s [ 2 ]))
+              , Tuple 2 (Tuple 2 (s [ 3, 4 ]))
+              , Tuple 3 (Tuple 3 (s [ 1 ]))
+              , Tuple 4 (Tuple 4 (s [ ]))
+              , Tuple 5 (Tuple 5 (s [ 1 ]))
               ])
     describe "insertEdgeWithVertices" do
       it "works for examples" do
@@ -68,6 +68,14 @@ main = do
               Graph.insertEdgeWithVertices (t 3) (t 6) $
               Graph.empty
         Graph.toMap graph `shouldEqual` Graph.toMap acyclicGraph
+        let graph' =
+               Graph.insertEdgeWithVertices (t 5) (t 1) $
+               Graph.insertEdgeWithVertices (t 1) (t 2) $
+               Graph.insertEdgeWithVertices (t 2) (t 4) $
+               Graph.insertEdgeWithVertices (t 2) (t 3) $
+               Graph.insertEdgeWithVertices (t 3) (t 1) $
+               Graph.empty
+        Graph.toMap graph' `shouldEqual` Graph.toMap cyclicGraph
     describe "descendants" do
       it "works for examples" do
         Graph.descendants 1 acyclicGraph `shouldEqual` Set.fromFoldable [ 2, 3, 4, 5, 6, 7, 8 ]
