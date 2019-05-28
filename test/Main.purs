@@ -74,6 +74,19 @@ main = do
         Graph.ancestors 6 acyclicGraph `shouldEqual` Set.fromFoldable [ 1, 2, 3 ]
         Graph.ancestors 7 acyclicGraph `shouldEqual` Set.fromFoldable [ 1, 2, 3, 4, 5, 8 ]
         Graph.ancestors 8 acyclicGraph `shouldEqual` Set.fromFoldable [ 1, 2, 4 ]
+    describe "inCycle" do
+      it "works for examples" do
+        Graph.inCycle 1 cyclicGraph `shouldEqual` true
+        Graph.inCycle 2 cyclicGraph `shouldEqual` true
+        Graph.inCycle 3 cyclicGraph `shouldEqual` true
+        Graph.inCycle 4 cyclicGraph `shouldEqual` false
+        Graph.inCycle 5 cyclicGraph `shouldEqual` false
+    describe "cyclic" do
+      it "works for examples" do
+        Graph.cyclic cyclicGraph `shouldEqual` true
+        Graph.cyclic acyclicGraph `shouldEqual` false
+        Graph.acyclic cyclicGraph `shouldEqual` false
+        Graph.acyclic acyclicGraph `shouldEqual` true
     describe "adjacent" do
       it "works for examples" do
         Graph.adjacent 1 acyclicGraph `shouldEqual` Set.fromFoldable [ 2 ]

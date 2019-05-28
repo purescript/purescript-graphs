@@ -12,6 +12,9 @@ module Data.Graph
   , parents
   , ancestors
   , topologicalSort
+  , inCycle
+  , cyclic
+  , acyclic
   , adjacent
   , isAdjacent
   , connected
@@ -131,6 +134,29 @@ descendants k' g = go k'
    go k = Set.unions $ Set.insert dd $ Set.map go dd
      where
        dd = children k g
+
+-- | Checks if given key is part of a cycle.
+inCycle :: forall k v. Ord k => k -> Graph k v -> Boolean
+inCycle k' g = go mempty k'
+  where
+    go seen k =
+      case Tuple (dd == mempty) (k `Set.member` seen) of
+        Tuple true _ -> false
+        Tuple _ true -> k == k'
+        Tuple false false -> Foldable.any (go (Set.insert k seen)) dd
+      where
+        dd = children k g
+
+-- | Checks if there any cycles in graph.
+-- There's presumably a faster implementation but this is very easy to implement
+cyclic :: forall k v. Ord k => Graph k v -> Boolean
+cyclic g = Foldable.any (flip inCycle g) <<< keys $ g
+  where
+    keys (Graph g') = M.keys g'
+
+-- | Checks if there are not any cycles in the graph.
+acyclic :: forall k v. Ord k => Graph k v -> Boolean
+acyclic = not <<< cyclic
 
 type SortState k v =
   { unvisited :: Map k (Tuple v (List k))
