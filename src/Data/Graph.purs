@@ -4,6 +4,11 @@ module Data.Graph
   ( Graph
   , unfoldGraph
   , fromMap
+  , toMap
+  , empty
+  , insertEdge
+  , insertVertex
+  , insertEdgeWithVertices
   , vertices
   , lookup
   , outEdges
@@ -45,6 +50,32 @@ newtype Graph k v = Graph (Map k (Tuple v (List k)))
 instance functorGraph :: Functor (Graph k) where
   map f (Graph m) = Graph (map (lmap f) m)
 
+-- | An empty graph.
+empty :: forall k v. Graph k v
+empty = Graph M.empty
+
+-- | Insert an edge from the start key to the end key.
+insertEdge :: forall k v. Ord k => k -> k -> Graph k v -> Graph k v
+insertEdge from to (Graph g) =
+  Graph $ M.alter (map (rmap (insert to))) from g
+  where
+    insert k l =
+      if k `Foldable.elem` l
+      then l
+      else k `Cons` l
+
+-- | Insert a vertex into the graph.
+-- |
+-- | If the key already exists, replaces the existing value and
+-- |preserves existing edges.
+insertVertex :: forall k v. Ord k => k -> v -> Graph k v -> Graph k v
+insertVertex k v (Graph g) = Graph $ M.insertWith (\(Tuple _ ks) _ -> Tuple v ks) k (Tuple v mempty) g
+
+-- | Insert two vertices and connect them.
+insertEdgeWithVertices :: forall k v. Ord k => Tuple k v -> Tuple k v -> Graph k v -> Graph k v
+insertEdgeWithVertices from@(Tuple fromKey _) to@(Tuple toKey _) =
+  insertEdge fromKey toKey <<< uncurry insertVertex from <<< uncurry insertVertex to
+
 -- | Unfold a `Graph` from a collection of keys and functions which label keys
 -- | and specify out-edges.
 unfoldGraph
@@ -65,6 +96,11 @@ unfoldGraph ks label edges =
 -- | outgoing edges.
 fromMap :: forall k v. Map k (Tuple v (List k)) -> Graph k v
 fromMap = Graph
+
+-- | Turn a `Graph` into a `Map` which maps vertices to their labels and
+-- | outgoing edges.
+toMap :: forall k v. Graph k v -> Map k (Tuple v (List k))
+toMap (Graph g) = g
 
 -- | Check if the first key is adjacent to the second.
 isAdjacent :: forall k v. Ord k => k -> k -> Graph k v -> Boolean

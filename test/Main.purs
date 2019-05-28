@@ -54,6 +54,20 @@ main = do
               , Tuple 4 (Tuple 4 (l [ ]))
               , Tuple 5 (Tuple 5 (l [ 1 ]))
               ])
+    describe "insertEdgeWithVertices" do
+      it "works for examples" do
+        let t n = Tuple n n
+            graph =
+              Graph.insertEdgeWithVertices (t 1) (t 2) $
+              Graph.insertEdgeWithVertices (t 2) (t 4) $
+              Graph.insertEdgeWithVertices (t 4) (t 8) $
+              Graph.insertEdgeWithVertices (t 8) (t 5) $
+              Graph.insertEdgeWithVertices (t 5) (t 7) $
+              Graph.insertEdgeWithVertices (t 2) (t 3) $
+              Graph.insertEdgeWithVertices (t 3) (t 5) $
+              Graph.insertEdgeWithVertices (t 3) (t 6) $
+              Graph.empty
+        Graph.toMap graph `shouldEqual` Graph.toMap acyclicGraph
     describe "descendants" do
       it "works for examples" do
         Graph.descendants 1 acyclicGraph `shouldEqual` Set.fromFoldable [ 2, 3, 4, 5, 6, 7, 8 ]
