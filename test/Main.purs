@@ -2,16 +2,13 @@ module Test.Main where
 
 import Prelude
 
-import Data.Graph (topologicalSort, unfoldGraph)
 import Data.Graph as Graph
-import Data.List (toUnfoldable, range)
 import Data.List as List
 import Data.Map as Map
 import Data.Maybe (Maybe(..))
 import Data.Set as Set
 import Data.Tuple (Tuple(..))
-import Effect (Effect, foreachE)
-import Effect.Console (logShow)
+import Effect (Effect)
 import Test.Spec (describe, it)
 import Test.Spec.Assertions (shouldEqual)
 import Test.Spec.Reporter.Console (consoleReporter)
@@ -19,10 +16,6 @@ import Test.Spec.Runner (run)
 
 main :: Effect Unit
 main = do
-  let double x | x * 2 < 100000 = [x * 2]
-               | otherwise      = []
-      graph = unfoldGraph (range 1 100000) identity double
-  foreachE (toUnfoldable (topologicalSort graph)) logShow
   run [consoleReporter] do
     let s = Set.fromFoldable
         --       4 - 8
@@ -54,6 +47,9 @@ main = do
               , Tuple 4 (Tuple 4 (s [ ]))
               , Tuple 5 (Tuple 5 (s [ 1 ]))
               ])
+    describe "topologicalSort" do
+      it "works for an example" do
+        Graph.topologicalSort acyclicGraph `shouldEqual` List.fromFoldable [ 1, 2, 4, 8, 3, 6, 5, 7 ]
     describe "insertEdgeWithVertices" do
       it "works for examples" do
         let t n = Tuple n n
