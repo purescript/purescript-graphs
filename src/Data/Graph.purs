@@ -17,12 +17,12 @@ module Data.Graph
   , parents
   , ancestors
   , topologicalSort
-  , inCycle
-  , cyclic
-  , acyclic
+  , isInCycle
+  , isCyclic
+  , isAcyclic
   , adjacent
   , isAdjacent
-  , connected
+  , areConnected
   , path
   ) where
 
@@ -124,8 +124,8 @@ path start end (Graph g) = L.reverse <$> go mempty start
         hist' = k `Cons` hist
 
 -- | Checks if there's a directed path between the start and end key.
-connected :: forall k v. Ord k => k -> k -> Graph k v -> Boolean
-connected start end g = isJust $ path start end g
+areConnected :: forall k v. Ord k => k -> k -> Graph k v -> Boolean
+areConnected start end g = isJust $ path start end g
 
 -- | List all vertices in a graph.
 vertices :: forall k v. Graph k v -> List v
@@ -168,8 +168,8 @@ descendants k' g = go k'
        dd = children k g
 
 -- | Checks if given key is part of a cycle.
-inCycle :: forall k v. Ord k => k -> Graph k v -> Boolean
-inCycle k' g = go mempty k'
+isInCycle :: forall k v. Ord k => k -> Graph k v -> Boolean
+isInCycle k' g = go mempty k'
   where
     go seen k =
       case Tuple (dd == mempty) (k `Set.member` seen) of
@@ -181,14 +181,14 @@ inCycle k' g = go mempty k'
 
 -- | Checks if there any cycles in graph.
 -- There's presumably a faster implementation but this is very easy to implement
-cyclic :: forall k v. Ord k => Graph k v -> Boolean
-cyclic g = Foldable.any (flip inCycle g) <<< keys $ g
+isCyclic :: forall k v. Ord k => Graph k v -> Boolean
+isCyclic g = Foldable.any (flip isInCycle g) <<< keys $ g
   where
     keys (Graph g') = M.keys g'
 
 -- | Checks if there are not any cycles in the graph.
-acyclic :: forall k v. Ord k => Graph k v -> Boolean
-acyclic = not <<< cyclic
+isAcyclic :: forall k v. Ord k => Graph k v -> Boolean
+isAcyclic = not <<< isCyclic
 
 type SortState k v =
   { unvisited :: Map k (Tuple v (Set k))
