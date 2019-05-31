@@ -5,7 +5,6 @@ import Prelude
 import Data.Graph as Graph
 import Data.List as List
 import Data.Map as Map
-import Data.Maybe (Maybe(..))
 import Data.Set as Set
 import Data.Tuple (Tuple(..))
 import Effect (Effect)
@@ -17,7 +16,7 @@ import Test.Spec.Runner (run)
 main :: Effect Unit
 main = do
   run [consoleReporter] do
-    let s = Set.fromFoldable
+    let n k v = Tuple k (Tuple k (Set.fromFoldable v ))
         --       4 - 8
         --      /     \
         -- 1 - 2 - 3 - 5 - 7
@@ -26,14 +25,14 @@ main = do
         acyclicGraph =
           Graph.fromMap (
             Map.fromFoldable
-              [ Tuple 1 (Tuple 1 (s [ 2 ]))
-              , Tuple 2 (Tuple 2 (s [ 3, 4 ]))
-              , Tuple 3 (Tuple 3 (s [ 5, 6 ]))
-              , Tuple 4 (Tuple 4 (s [ 8 ]))
-              , Tuple 5 (Tuple 5 (s [ 7 ]))
-              , Tuple 6 (Tuple 6 (s [ ]))
-              , Tuple 7 (Tuple 7 (s [ ]))
-              , Tuple 8 (Tuple 8 (s [ 5 ]))
+              [ n 1 [ 2 ]
+              , n 2 [ 3, 4 ]
+              , n 3 [ 5, 6 ]
+              , n 4 [ 8 ]
+              , n 5 [ 7 ]
+              , n 6 [ ]
+              , n 7 [ ]
+              , n 8 [ 5 ]
               ])
         --       2 - 4
         --      / \
@@ -41,18 +40,18 @@ main = do
         cyclicGraph =
           Graph.fromMap (
             Map.fromFoldable
-              [ Tuple 1 (Tuple 1 (s [ 2 ]))
-              , Tuple 2 (Tuple 2 (s [ 3, 4 ]))
-              , Tuple 3 (Tuple 3 (s [ 1 ]))
-              , Tuple 4 (Tuple 4 (s [ ]))
-              , Tuple 5 (Tuple 5 (s [ 1 ]))
+              [ n 1 [ 2 ]
+              , n 2 [ 3, 4 ]
+              , n 3 [ 1 ]
+              , n 4 [ ]
+              , n 5 [ 1 ]
               ])
     describe "topologicalSort" do
       it "works for an example" do
         Graph.topologicalSort acyclicGraph `shouldEqual` List.fromFoldable [ 1, 2, 4, 8, 3, 6, 5, 7 ]
     describe "insertEdgeWithVertices" do
       it "works for examples" do
-        let t n = Tuple n n
+        let t x = Tuple x x
             graph =
               Graph.insertEdgeWithVertices (t 1) (t 2) $
               Graph.insertEdgeWithVertices (t 2) (t 4) $
