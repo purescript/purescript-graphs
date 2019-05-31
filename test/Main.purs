@@ -120,13 +120,14 @@ main = do
         Graph.adjacent 3 cyclicGraph `shouldEqual` Set.fromFoldable [ 1, 2 ]
         Graph.adjacent 4 cyclicGraph `shouldEqual` Set.fromFoldable [ 2 ]
         Graph.adjacent 5 cyclicGraph `shouldEqual` Set.fromFoldable [ 1 ]
-    describe "path" do
+    describe "allPaths" do
       it "works for examples" do
-        Graph.path 2 1 acyclicGraph `shouldEqual` Nothing
-        Graph.path 1 9 acyclicGraph `shouldEqual` Nothing
-        Graph.path 1 1 acyclicGraph `shouldEqual` Just (List.fromFoldable [ 1 ])
-        Graph.path 1 2 acyclicGraph `shouldEqual` Just (List.fromFoldable [ 1, 2 ])
-        Graph.path 1 7 acyclicGraph `shouldEqual` Just (List.fromFoldable [ 1, 2, 3, 5, 7 ])
-        Graph.path 1 8 acyclicGraph `shouldEqual` Just (List.fromFoldable [ 1, 2, 4, 8 ])
-        Graph.path 2 6 acyclicGraph `shouldEqual` Just (List.fromFoldable [ 2, 3, 6 ])
-        Graph.path 5 3 cyclicGraph `shouldEqual` Just (List.fromFoldable [ 5, 1, 2, 3 ])
+        Graph.allPaths 2 1 acyclicGraph `shouldEqual` Set.empty
+        Graph.allPaths 1 9 acyclicGraph `shouldEqual` Set.empty
+        Graph.allPaths 1 1 acyclicGraph `shouldEqual` Set.singleton (List.fromFoldable [ 1 ])
+        Graph.allPaths 1 2 acyclicGraph `shouldEqual` Set.singleton (List.fromFoldable [ 1, 2 ])
+        Graph.allPaths 1 7 acyclicGraph `shouldEqual`
+          Set.fromFoldable [ List.fromFoldable [ 1, 2, 4, 8, 5, 7 ], List.fromFoldable [ 1, 2, 3, 5, 7 ] ]
+        Graph.allPaths 1 8 acyclicGraph `shouldEqual` Set.singleton (List.fromFoldable [ 1, 2, 4, 8 ])
+        Graph.allPaths 2 6 acyclicGraph `shouldEqual` Set.singleton (List.fromFoldable [ 2, 3, 6 ])
+        Graph.allPaths 5 3 cyclicGraph `shouldEqual` Set.singleton (List.fromFoldable [ 5, 1, 2, 3 ])

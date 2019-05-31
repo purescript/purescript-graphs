@@ -23,11 +23,13 @@ module Data.Graph
   , adjacent
   , isAdjacent
   , areConnected
-  , path
+  , shortestPath
+  , allPaths
   ) where
 
 import Prelude
 
+import Data.Array as Array
 import Data.Bifunctor (lmap, rmap)
 import Data.CatList (CatList)
 import Data.CatList as CL
@@ -35,6 +37,7 @@ import Data.Foldable (class Foldable)
 import Data.Foldable as Foldable
 import Data.List (List(..))
 import Data.List as L
+import Data.List as List
 import Data.Map (Map)
 import Data.Map as M
 import Data.Maybe (Maybe(..), isJust, maybe)
@@ -108,24 +111,31 @@ adjacent k g = children k g `Set.union` parents k g
 
 -- | Returns shortest path between start and end key if it exists.
 -- |
--- | Will return bottom if the path includes but doesn't end on a cycle.
-path :: forall k v. Ord k => k -> k -> Graph k v -> Maybe (List k)
-path start end (Graph g) = L.reverse <$> go mempty start
+-- | Cyclic graphs may return bottom.
+shortestPath :: forall k v. Ord k => k -> k -> Graph k v -> Maybe (List k)
+shortestPath start end g =
+  Array.head <<< Array.sortWith List.length <<< S.toUnfoldable $ allPaths start end g
+
+-- | Returns shortest path between start and end key if it exists.
+-- |
+-- | Cyclic graphs may return bottom.
+allPaths :: forall k v. Ord k => k -> k -> Graph k v -> Set (List k)
+allPaths start end g = Set.map L.reverse $ go mempty start
   where
     go hist k =
       if end == k
-      then Just hist'
+      then Set.singleton hist'
       else
-        case M.lookup k g of
-          Nothing -> Nothing
-          Just (Tuple _ ks) ->
-            S.findMin <<< S.mapMaybe identity $ Set.map (go hist') ks
+        if children' == Set.empty
+        then Set.empty
+        else Foldable.foldMap (go hist') children'
       where
+        children' = children k g
         hist' = k `Cons` hist
 
 -- | Checks if there's a directed path between the start and end key.
 areConnected :: forall k v. Ord k => k -> k -> Graph k v -> Boolean
-areConnected start end g = isJust $ path start end g
+areConnected start end g = isJust $ shortestPath start end g
 
 -- | List all vertices in a graph.
 vertices :: forall k v. Graph k v -> List v
