@@ -20,6 +20,8 @@ module Data.Graph
   , isInCycle
   , isCyclic
   , isAcyclic
+  , alterVertex
+  , alterEdges
   , adjacent
   , isAdjacent
   , areConnected
@@ -199,6 +201,24 @@ isCyclic g = Foldable.any (flip isInCycle g) <<< keys $ g
 -- | Checks if there are not any cycles in the graph.
 isAcyclic :: forall k v. Ord k => Graph k v -> Boolean
 isAcyclic = not <<< isCyclic
+
+alterVertex ::
+  forall v k.
+  Ord k =>
+  (Maybe v -> Maybe v) ->
+  k -> Graph k v -> Graph k v
+alterVertex f k (Graph g) = Graph $ M.alter (applyF =<< _) k g
+  where
+    applyF (Tuple v es) = flip Tuple es <$> f (Just v)
+
+alterEdges ::
+  forall v k.
+  Ord k =>
+  (Maybe (Set k) -> Maybe (Set k)) ->
+  k -> Graph k v -> Graph k v
+alterEdges f k (Graph g) = Graph $ M.alter (applyF =<< _) k g
+  where
+    applyF (Tuple v es) = Tuple v <$> f (Just es)
 
 type SortState k v =
   { unvisited :: Map k (Tuple v (Set k))
