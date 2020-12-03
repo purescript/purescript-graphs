@@ -19,10 +19,10 @@
     "package.json"
   ],
   "dependencies": {
-    "purescript-ordered-collections": "^1.0.0",
-    "purescript-catenable-lists": "^5.0.0"
+    "purescript-ordered-collections": "master",
+    "purescript-catenable-lists": "master"
   },
   "devDependencies": {
-    "purescript-console": "^4.1.0"
+    "purescript-console": "master"
   }
 }
