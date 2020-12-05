@@ -1,14 +1,14 @@
 # purescript-graphs
 
 [![Latest release](http://img.shields.io/github/release/purescript/purescript-graphs.svg)](https://github.com/purescript/purescript-graphs/releases)
-[![Build status](https://travis-ci.org/purescript/purescript-graphs.svg?branch=master)](https://travis-ci.org/purescript/purescript-graphs)
+[![Build status](https://github.com/purescript/purescript-graphs/workflows/CI/badge.svg?branch=master)](https://github.com/purescript/purescript-graphs/actions?query=workflow%3ACI+branch%3Amaster)
 
 A data structure and functions for graphs.
 
 ## Installation
 
 ```
-bower install purescript-graphs
+spago install graphs
 ```
 
 ## Documentation
