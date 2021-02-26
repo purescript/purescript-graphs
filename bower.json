@@ -6,7 +6,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git://github.com/purescript/purescript-graphs.git"
+    "url": "https://github.com/purescript/purescript-graphs.git"
   },
   "license": "MIT",
   "ignore": [
@@ -19,10 +19,10 @@
     "package.json"
   ],
   "dependencies": {
-    "purescript-ordered-collections": "master",
-    "purescript-catenable-lists": "master"
+    "purescript-catenable-lists": "^6.0.0",
+    "purescript-ordered-collections": "^2.0.0"
   },
   "devDependencies": {
-    "purescript-console": "master"
+    "purescript-console": "^5.0.0"
   }
 }
