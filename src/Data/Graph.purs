@@ -14,7 +14,7 @@ import Prelude
 import Data.Bifunctor (lmap)
 import Data.CatList (CatList)
 import Data.CatList as CL
-import Data.Foldable (class Foldable)
+import Data.Foldable (class Foldable, foldl, foldr, foldMap)
 import Data.List (List(..))
 import Data.List as L
 import Data.Map (Map)
@@ -29,6 +29,11 @@ newtype Graph k v = Graph (Map k (Tuple v (List k)))
 
 instance functorGraph :: Functor (Graph k) where
   map f (Graph m) = Graph (map (lmap f) m)
+
+instance foldableGraph :: Foldable (Graph k) where
+  foldl   f z (Graph m) = foldl   f z $ fst <$> M.values m
+  foldr   f z (Graph m) = foldr   f z $ fst <$> M.values m
+  foldMap f   (Graph m) = foldMap f   $ fst <$> M.values m
 
 -- | Unfold a `Graph` from a collection of keys and functions which label keys
 -- | and specify out-edges.
