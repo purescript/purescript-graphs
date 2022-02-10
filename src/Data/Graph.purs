@@ -33,9 +33,9 @@ instance functorGraph :: Functor (Graph k) where
   map f (Graph m) = Graph (map (lmap f) m)
 
 instance foldableGraph :: Foldable (Graph k) where
-  foldl   f z (Graph m) = foldl   f z $ fst <$> M.values m
-  foldr   f z (Graph m) = foldr   f z $ fst <$> M.values m
-  foldMap f   (Graph m) = foldMap f   $ fst <$> M.values m
+  foldl   f z (Graph m) = foldl   (\acc (Tuple k _) -> f acc k) z $ M.values m
+  foldr   f z (Graph m) = foldr   (\(Tuple k _) acc -> f k acc) z $ M.values m
+  foldMap f   (Graph m) = foldMap (f <<< fst) $ M.values m
 
 instance traversableGraph :: Traversable (Graph k) where
   traverse f (Graph m) = Graph <$> (traverse (\(v /\ ks) -> (_ /\ ks) <$> (f v)) m)
