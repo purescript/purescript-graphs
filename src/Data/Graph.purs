@@ -14,13 +14,15 @@ import Prelude
 import Data.Bifunctor (lmap)
 import Data.CatList (CatList)
 import Data.CatList as CL
-import Data.Foldable (class Foldable)
+import Data.Foldable (class Foldable, foldl, foldr, foldMap)
 import Data.List (List(..))
 import Data.List as L
 import Data.Map (Map)
 import Data.Map as M
 import Data.Maybe (Maybe(..), maybe)
 import Data.Tuple (Tuple(..), fst, snd)
+import Data.Tuple.Nested ((/\))
+import Data.Traversable (class Traversable, traverse)
 
 -- | A graph with vertices of type `v`.
 -- |
@@ -29,6 +31,15 @@ newtype Graph k v = Graph (Map k (Tuple v (List k)))
 
 instance functorGraph :: Functor (Graph k) where
   map f (Graph m) = Graph (map (lmap f) m)
+
+instance foldableGraph :: Foldable (Graph k) where
+  foldl   f z (Graph m) = foldl   (\acc (Tuple k _) -> f acc k) z $ M.values m
+  foldr   f z (Graph m) = foldr   (\(Tuple k _) acc -> f k acc) z $ M.values m
+  foldMap f   (Graph m) = foldMap (f <<< fst) $ M.values m
+
+instance traversableGraph :: Traversable (Graph k) where
+  traverse f (Graph m) = Graph <$> (traverse (\(v /\ ks) -> (_ /\ ks) <$> (f v)) m)
+  sequence = traverse identity
 
 -- | Unfold a `Graph` from a collection of keys and functions which label keys
 -- | and specify out-edges.
