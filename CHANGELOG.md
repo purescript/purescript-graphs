@@ -8,6 +8,7 @@ Breaking changes:
 
 New features:
 - Added a `Foldable` instance for `Graph`
+- Added a `Traversable` instance for `Graph`
 
 Bugfixes:
 
