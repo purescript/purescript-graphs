@@ -7,6 +7,7 @@ Notable changes to this project are documented in this file. The format is based
 Breaking changes:
 
 New features:
+- Added an `edges` function that returns a list of all edges in the graph (#17 by @MaybeJustJames)
 - Added `toMap` to unwrap `Graph` (#18)
 
 Bugfixes:
