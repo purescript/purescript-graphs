@@ -2,21 +2,25 @@
 
 module Data.Graph
   ( Graph
+  , Edge
   , unfoldGraph
   , fromMap
   , toMap
   , vertices
+  , edges
   , lookup
   , outEdges
   , topologicalSort
   ) where
 
 import Prelude
+
+import Control.Monad.Rec.Class (Step(..), tailRec)
 import Data.Bifunctor (lmap)
 import Data.CatList (CatList)
 import Data.CatList as CL
 import Data.Foldable (class Foldable, foldl, foldr, foldMap)
-import Data.List (List(..))
+import Data.List (List(..), (:))
 import Data.List as L
 import Data.Map (Map)
 import Data.Map as M
@@ -42,6 +46,9 @@ instance traversableGraph :: Traversable (Graph k) where
   traverse f (Graph m) = Graph <$> (traverse (\(v /\ ks) -> (_ /\ ks) <$> (f v)) m)
   sequence = traverse identity
 
+-- | An edge within a `Graph` referencing endpoint keys
+newtype Edge k = Edge (Tuple k k)
+
 -- | Unfold a `Graph` from a collection of keys and functions which label keys
 -- | and specify out-edges.
 unfoldGraph
@@ -54,9 +61,9 @@ unfoldGraph
   -> (k -> v)
   -> (k -> out k)
   -> Graph k v
-unfoldGraph ks label edges =
+unfoldGraph ks label theEdges =
   Graph (M.fromFoldable (map (\k ->
-            Tuple k (Tuple (label k) (L.fromFoldable (edges k)))) ks))
+            Tuple k (Tuple (label k) (L.fromFoldable (theEdges k)))) ks))
 
 -- | Create a `Graph` from a `Map` which maps vertices to their labels and
 -- | outgoing edges.
@@ -71,6 +78,20 @@ toMap (Graph g) = g
 -- | List all vertices in a graph.
 vertices :: forall k v. Graph k v -> List v
 vertices (Graph g) = map fst (M.values g)
+
+type EdgesState k v =
+  { unvisited :: List (Tuple k (Tuple v (List k)))
+  , result :: List (Edge k)
+  }
+
+-- | List all edges in a graph
+edges :: forall k v. Graph k v -> List (Edge k)
+edges (Graph g) = tailRec go { unvisited: M.toUnfoldableUnordered g, result: Nil }
+  where
+    go :: EdgesState k v -> Step _ (List (Edge k))
+    go { unvisited: Nil, result: res } = Done res
+    go { unvisited: (Tuple src (Tuple _ dests)) : ns, result: res } =
+            Loop { unvisited: ns, result: map (Edge <<< (src /\ _)) dests <> res }
 
 -- | Lookup a vertex by its key.
 lookup :: forall k v. Ord k => k -> Graph k v -> Maybe v

@@ -7,8 +7,8 @@ import Effect.Console (logShow)
 import Data.Foldable (foldr)
 import Data.Maybe (Maybe(Just))
 import Data.Traversable (traverse)
-import Data.Graph (Graph, unfoldGraph, topologicalSort)
-import Data.List (filter, toUnfoldable, range, (:), List(Nil))
+import Data.Graph (Graph, edges, unfoldGraph, topologicalSort)
+import Data.List (filter, length, toUnfoldable, range, (:), List(Nil))
 
 main :: Effect Unit
 main = do
@@ -20,4 +20,4 @@ main = do
   logShow
     $ filter (_ /= 0) <<< foldr (:) Nil
     <$> traverse (\n -> if n `mod` 2 == 0 then Just 0 else Just n) graph
-
+  logShow (length (edges graph))
