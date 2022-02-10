@@ -7,8 +7,7 @@ Notable changes to this project are documented in this file. The format is based
 Breaking changes:
 
 New features:
-- Added a `Foldable` instance for `Graph`
-- Added a `Traversable` instance for `Graph`
+- Added `Foldable` and `Traversable` instances for `Graph` (#16 by @MaybeJustJames)
 
 Bugfixes:
 
