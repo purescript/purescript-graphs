@@ -21,6 +21,8 @@ import Data.Map (Map)
 import Data.Map as M
 import Data.Maybe (Maybe(..), maybe)
 import Data.Tuple (Tuple(..), fst, snd)
+import Data.Tuple.Nested ((/\))
+import Data.Traversable (class Traversable, traverse)
 
 -- | A graph with vertices of type `v`.
 -- |
@@ -34,6 +36,10 @@ instance foldableGraph :: Foldable (Graph k) where
   foldl   f z (Graph m) = foldl   f z $ fst <$> M.values m
   foldr   f z (Graph m) = foldr   f z $ fst <$> M.values m
   foldMap f   (Graph m) = foldMap f   $ fst <$> M.values m
+
+instance traversableGraph :: Traversable (Graph k) where
+  traverse f (Graph m) = Graph <$> (traverse (\(v /\ ks) -> (_ /\ ks) <$> (f v)) m)
+  sequence = traverse identity
 
 -- | Unfold a `Graph` from a collection of keys and functions which label keys
 -- | and specify out-edges.
