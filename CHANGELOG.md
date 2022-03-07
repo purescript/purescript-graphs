@@ -8,6 +8,7 @@ Breaking changes:
 
 New features:
 - Added `Foldable` and `Traversable` instances for `Graph` (#16 by @MaybeJustJames)
+- Added `toMap` to unwrap `Graph` (#18)
 
 Bugfixes:
 
