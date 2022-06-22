@@ -4,6 +4,7 @@ module Data.Graph
   ( Graph
   , unfoldGraph
   , fromMap
+  , toMap
   , vertices
   , lookup
   , outEdges
@@ -61,6 +62,11 @@ unfoldGraph ks label edges =
 -- | outgoing edges.
 fromMap :: forall k v. Map k (Tuple v (List k)) -> Graph k v
 fromMap = Graph
+
+-- | Create a `Map` which maps vertices to their labels and
+-- | outgoing edges from a `Graph`.
+toMap :: forall k v. Graph k v -> Map k (Tuple v (List k))
+toMap (Graph g) = g
 
 -- | List all vertices in a graph.
 vertices :: forall k v. Graph k v -> List v
