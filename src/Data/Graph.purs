@@ -2,7 +2,7 @@
 
 module Data.Graph
   ( Graph
-  , Edge(Edge)
+  , Edge(..)
   , unfoldGraph
   , fromMap
   , toMap
