@@ -3,7 +3,7 @@ module Test.Main where
 import Prelude
 
 import Data.Foldable (foldr)
-import Data.Graph (Graph, Edge(Edge), edges, fromMap, toMap, unfoldGraph, topologicalSort)
+import Data.Graph (Graph, Edge(..), edges, fromMap, unfoldGraph, topologicalSort)
 import Data.List (filter, length, toUnfoldable, range, (:), List(Nil))
 import Data.Map (Map)
 import Data.Map as M
