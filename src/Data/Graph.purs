@@ -19,6 +19,7 @@ import Data.Bifunctor (lmap)
 import Data.CatList (CatList)
 import Data.CatList as CL
 import Data.Foldable (class Foldable, foldl, foldr, foldMap)
+import Data.FoldableWithIndex (foldlWithIndex)
 import Data.List (List(..), (:))
 import Data.List as L
 import Data.Map (Map)
@@ -78,28 +79,16 @@ toMap (Graph g) = g
 vertices :: forall k v. Graph k v -> List v
 vertices (Graph g) = map fst (M.values g)
 
-type EdgesState k v =
-  { unvisited :: List (Tuple k (Tuple v (List k)))
-  , result :: List (Edge k)
-  }
-
 -- | List all edges in a graph
 edges :: forall k v. Graph k v -> List (Edge k)
-edges (Graph g) = go initialState
+edges (Graph g) = foldlWithIndex edges' Nil g
   where
-    go :: EdgesState k v -> List (Edge k)
-    go { unvisited: Nil, result: res } = res
-    go { unvisited: (src /\ (_ /\ dests)) : ns, result: res } =
-      go
-        { unvisited: ns
-        , result: map (Edge <<< (src /\ _)) dests <> res
-        }
+    edges' :: k -> List (Edge k) -> Tuple v (List k) -> List (Edge k)
+    edges' src acc (_ /\ dests) =
+      foldl (mkEdge src) acc dests
 
-    initialState :: EdgesState k v
-    initialState =
-      { unvisited: M.toUnfoldableUnordered g
-      , result: Nil
-      }
+    mkEdge :: k -> List (Edge k) -> k -> List (Edge k)
+    mkEdge src acc dest = Edge (src /\ dest) : acc
 
 -- | Lookup a vertex by its key.
 lookup :: forall k v. Ord k => k -> Graph k v -> Maybe v
