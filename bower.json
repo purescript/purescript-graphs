@@ -20,8 +20,7 @@
   ],
   "dependencies": {
     "purescript-catenable-lists": "^7.0.0",
-    "purescript-ordered-collections": "^3.0.0",
-    "purescript-tailrec": "^6.0.0"
+    "purescript-ordered-collections": "^3.0.0"
   },
   "devDependencies": {
     "purescript-console": "^6.0.0"

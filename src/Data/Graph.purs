@@ -2,7 +2,7 @@
 
 module Data.Graph
   ( Graph
-  , Edge
+  , Edge(Edge)
   , unfoldGraph
   , fromMap
   , toMap
@@ -15,7 +15,6 @@ module Data.Graph
 
 import Prelude
 
-import Control.Monad.Rec.Class (Step(..), tailRec)
 import Data.Bifunctor (lmap)
 import Data.CatList (CatList)
 import Data.CatList as CL
@@ -86,12 +85,21 @@ type EdgesState k v =
 
 -- | List all edges in a graph
 edges :: forall k v. Graph k v -> List (Edge k)
-edges (Graph g) = tailRec go { unvisited: M.toUnfoldableUnordered g, result: Nil }
+edges (Graph g) = go initialState
   where
-    go :: EdgesState k v -> Step _ (List (Edge k))
-    go { unvisited: Nil, result: res } = Done res
-    go { unvisited: (Tuple src (Tuple _ dests)) : ns, result: res } =
-            Loop { unvisited: ns, result: map (Edge <<< (src /\ _)) dests <> res }
+    go :: EdgesState k v -> List (Edge k)
+    go { unvisited: Nil, result: res } = res
+    go { unvisited: (src /\ (_ /\ dests)) : ns, result: res } =
+      go
+        { unvisited: ns
+        , result: map (Edge <<< (src /\ _)) dests <> res
+        }
+
+    initialState :: EdgesState k v
+    initialState =
+      { unvisited: M.toUnfoldableUnordered g
+      , result: Nil
+      }
 
 -- | Lookup a vertex by its key.
 lookup :: forall k v. Ord k => k -> Graph k v -> Maybe v
