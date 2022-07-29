@@ -3,7 +3,7 @@ module Test.Main where
 import Prelude
 
 import Data.Foldable (foldr)
-import Data.Graph (Graph, Source(..), Destination(..), edges, fromMap, unfoldGraph, topologicalSort)
+import Data.Graph (Graph, Edge, edges, fromMap, unfoldGraph, topologicalSort)
 import Data.List (filter, length, toUnfoldable, range, (:), List(Nil))
 import Data.Map (Map)
 import Data.Map as M
@@ -34,9 +34,9 @@ example1 =
       , (3 /\ (3 /\ Nil))
       ]
 
-showEdge :: forall k. Show k => Tuple (Source k) (Destination k) -> String
-showEdge ((Source src) /\ (Destination dest)) =
-  "(" <> show src <> " --> " <> show dest <> ")"
+showEdge :: forall k. Show k => Edge k -> String
+showEdge { start, end } =
+  "(" <> show start <> " --> " <> show end <> ")"
 
 main :: Effect Unit
 main = do

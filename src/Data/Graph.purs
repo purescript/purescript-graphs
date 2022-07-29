@@ -2,8 +2,7 @@
 
 module Data.Graph
   ( Graph
-  , Destination(..)
-  , Source(..)
+  , Edge
   , unfoldGraph
   , fromMap
   , toMap
@@ -47,13 +46,8 @@ instance traversableGraph :: Traversable (Graph k) where
   traverse f (Graph m) = Graph <$> (traverse (\(v /\ ks) -> (_ /\ ks) <$> (f v)) m)
   sequence = traverse identity
 
--- | An edge has a source (a key for a node)
-newtype Source k = Source k
-
--- | An edge has a destination (a key for a node)
-newtype Destination k = Destination k
-
-type Edge k = Tuple (Source k) (Destination k)
+-- | An Edge between 2 nodes in a Graph
+type Edge k = { start :: k, end :: k }
 
 -- | Unfold a `Graph` from a collection of keys and functions which label keys
 -- | and specify out-edges.
@@ -86,7 +80,7 @@ vertices :: forall k v. Graph k v -> List v
 vertices (Graph g) = map fst (M.values g)
 
 -- | List all edges in a graph
-edges :: forall k v. Graph k v -> List (Tuple (Source k) (Destination k))
+edges :: forall k v. Graph k v -> List (Edge k)
 edges (Graph g) = foldlWithIndex edges' Nil g
   where
     edges' :: k -> List (Edge k) -> Tuple v (List k) -> List (Edge k)
@@ -94,7 +88,7 @@ edges (Graph g) = foldlWithIndex edges' Nil g
       foldl (mkEdge src) acc dests
 
     mkEdge :: k -> List (Edge k) -> k -> List (Edge k)
-    mkEdge src acc dest = (Source src /\ Destination dest) : acc
+    mkEdge src acc dest = { start: src, end: dest } : acc
 
 -- | Lookup a vertex by its key.
 lookup :: forall k v. Ord k => k -> Graph k v -> Maybe v
