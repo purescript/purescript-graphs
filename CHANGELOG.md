@@ -6,7 +6,7 @@ Notable changes to this project are documented in this file. The format is based
 
 Other improvements:
 
-- Migrate from Bower/Pulp to Spago and update CI and formatting
+- Migrate from Bower/Pulp to Spago and update CI and formatting (#21 by @thomashoneyman)
 
 ## [v8.1.0](https://github.com/purescript/purescript-graphs/releases/tag/v8.1.0) - 2022-07-30
 
