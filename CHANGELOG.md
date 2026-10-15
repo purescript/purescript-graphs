@@ -11,15 +11,18 @@ Other improvements:
 ## [v8.1.0](https://github.com/purescript/purescript-graphs/releases/tag/v8.1.0) - 2022-07-30
 
 New features:
+
 - Added an `edges` function that returns a list of all edges in the graph (#17 by @MaybeJustJames)
 - Added `toMap` to unwrap `Graph` (#18 by @notquiteamonad)
 
 ## [v8.0.0](https://github.com/purescript/purescript-graphs/releases/tag/v8.0.0) - 2022-04-27
 
 Breaking changes:
+
 - Update project and deps to PureScript v0.15.0 (#19 by @JordanMartinez)
 
 New features:
+
 - Added `Foldable` and `Traversable` instances for `Graph` (#16 by @MaybeJustJames)
 
 Bugfixes:
@@ -29,6 +32,7 @@ Other improvements:
 ## [v5.0.0](https://github.com/purescript/purescript-graphs/releases/tag/v5.0.0) - 2021-02-26
 
 Breaking changes:
+
 - Added support for PureScript 0.14 and dropped support for all previous versions (#11)
 
 New features:
@@ -36,6 +40,7 @@ New features:
 Bugfixes:
 
 Other improvements:
+
 - Migrated CI to GitHub Actions and updated installation instructions to use Spago
 - Added a CHANGELOG.md file and pull request template (#13, #14)
 
@@ -48,8 +53,6 @@ Updated for PureScript 0.12
 - Updated for PureScript 0.11.1
 
 ## [v2.0.0](https://github.com/purescript/purescript-graphs/releases/tag/v2.0.0) - 2016-11-19
-
-
 
 ## [v1.0.0](https://github.com/purescript/purescript-graphs/releases/tag/v1.0.0) - 2016-06-01
 
@@ -85,6 +88,7 @@ Update docs
 ## [v0.3.0](https://github.com/purescript/purescript-graphs/releases/tag/v0.3.0) - 2015-02-21
 
 **This release requires PureScript v0.6.8 or later**
+
 - Updated dependencies
 
 ## [v0.2.0](https://github.com/purescript/purescript-graphs/releases/tag/v0.2.0) - 2015-01-10
