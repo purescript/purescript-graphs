@@ -2,15 +2,11 @@
 
 Notable changes to this project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-
-Breaking changes:
-
-New features:
-
-Bugfixes:
+## [v8.1.1](https://github.com/purescript/purescript-graphs/releases/tag/v8.1.1)
 
 Other improvements:
+
+- Migrate from Bower/Pulp to Spago and update CI and formatting
 
 ## [v8.1.0](https://github.com/purescript/purescript-graphs/releases/tag/v8.1.0) - 2022-07-30
 
@@ -98,4 +94,3 @@ Update docs
 ## [v0.1.0](https://github.com/purescript/purescript-graphs/releases/tag/v0.1.0) - 2014-10-30
 
 Initial release after extracting from `purescript-maps`
-
