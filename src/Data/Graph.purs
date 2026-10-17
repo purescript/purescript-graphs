@@ -62,15 +62,8 @@ unfoldGraph
   -> (k -> out k)
   -> Graph k v
 unfoldGraph ks label theEdges =
-  Graph
-    ( M.fromFoldable
-        ( map
-            ( \k ->
-                Tuple k (Tuple (label k) (L.fromFoldable (theEdges k)))
-            )
-            ks
-        )
-    )
+  Graph $ M.fromFoldable $ ks <#> \k ->
+    Tuple k (Tuple (label k) (L.fromFoldable (theEdges k)))
 
 -- | Create a `Graph` from a `Map` which maps vertices to their labels and
 -- | outgoing edges.
@@ -132,16 +125,15 @@ topologicalSort (Graph g) =
   visit state stack =
     case CL.uncons stack of
       Nothing -> state
-      Just (Tuple (Emit k) ks) ->
+      Just (Tuple (Emit k) ks) -> do
         let
           state' =
             { result: Cons k state.result
             , unvisited: state.unvisited
             }
-        in
-          visit state' ks
+        visit state' ks
       Just (Tuple (Visit k) ks)
-        | k `M.member` state.unvisited ->
+        | k `M.member` state.unvisited -> do
             let
               start :: SortState k v
               start =
@@ -151,8 +143,7 @@ topologicalSort (Graph g) =
 
               next :: List k
               next = maybe mempty snd (M.lookup k g)
-            in
-              visit start (CL.fromFoldable (map Visit next) <> CL.cons (Emit k) ks)
+            visit start (CL.fromFoldable (map Visit next) <> CL.cons (Emit k) ks)
         | otherwise -> visit state ks
 
   initialState :: SortState k v
