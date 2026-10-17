@@ -3,8 +3,8 @@ module Test.Main where
 import Prelude
 
 import Data.Foldable (foldr)
-import Data.Graph (Graph, Edge, edges, fromMap, unfoldGraph, topologicalSort)
-import Data.List (filter, length, toUnfoldable, range, (:), List(Nil))
+import Data.Graph (Edge, Graph, edges, fromMap, topologicalSort, unfoldGraph)
+import Data.List (List(Nil), filter, length, range, toUnfoldable, (:))
 import Data.Map (Map)
 import Data.Map as M
 import Data.Maybe (Maybe(Just))
